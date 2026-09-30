@@ -1,0 +1,7 @@
+{
+  "name": "impola-website",
+  "private": true,
+  "description": "Statische Website impola.de mit Kontaktformular-Funktion (Vercel)",
+  "engines": { "node": ">=18" },
+  "dependencies": { "nodemailer": "^6.9.14" }
+}
