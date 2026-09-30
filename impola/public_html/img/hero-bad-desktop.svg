@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" role="img" aria-label="Platzhalter Hero Desktop – barrierefreies Bad">
+<defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="28" height="28" fill="#EEF1F3"/><rect width="14" height="28" fill="#E6EAED"/></pattern></defs>
+<rect width="1600" height="1200" fill="url(#p)"/>
+<g transform="translate(800.0,510.7)" fill="none" stroke="#518419" stroke-width="7.8" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-61 9 L0 -47 L61 9 M-45 -5 V52 H45 V-5"/></g>
+<text x="800.0" y="628.2" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-weight="700" font-size="47" fill="#1E252C">Bild 4.1</text>
+<text x="800.0" y="689.3" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="34" fill="#2A2F35">Hero Desktop – barrierefreies Bad</text>
+<text x="800.0" y="741.0" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="29" fill="#5B636B">1600 × 1200 px → img/hero-bad-desktop.webp</text>
+</svg>

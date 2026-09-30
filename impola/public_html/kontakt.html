@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kontakt – Beratung anfragen | IMPOLA Dortmund</title>
+<meta name="description" content="Kostenlose Beratung zu Badumbau, Sanierung und Objektservice in Dortmund. Rufen Sie an oder schreiben Sie uns.">
+<link rel="canonical" href="https://impola.de/kontakt">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="IMPOLA">
+<meta property="og:title" content="Kontakt – Beratung anfragen | IMPOLA Dortmund">
+<meta property="og:description" content="Kostenlose Beratung zu Badumbau, Sanierung und Objektservice in Dortmund. Rufen Sie an oder schreiben Sie uns.">
+<meta property="og:url" content="https://impola.de/kontakt">
+<meta property="og:image" content="https://impola.de/img/og-image.png">
+<meta name="theme-color" content="#1E252C">
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
+<header class="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="IMPOLA – zur Startseite"><img src="assets/img/impola-logo.png" alt="IMPOLA" width="640" height="201"></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hauptnavigation"><span aria-hidden="true">☰</span><span class="label">Menü</span></button>
+    <nav class="nav" id="hauptnavigation" aria-label="Hauptnavigation"><ul><li><a href="badumbau.html">Badumbau</a></li><li><a href="sanierung.html">Sanierung & Umbau</a></li><li><a href="objektservice.html">Objektservice</a></li><li><a href="ueber-uns.html">Über uns</a></li><li><a href="kontakt.html" aria-current="page">Kontakt</a></li></ul></nav>
+    <a class="header-tel" href="tel:+491789176594" aria-label="Anrufen: 0178 9176594"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span>0178 9176594</span></a>
+    <a class="btn btn-primaer" href="kontakt.html">Beratung anfragen</a>
+  </div>
+</header>
+<main id="inhalt">
+<section class="seitenkopf ohne-bild">
+  <div class="wrap">
+    <div>
+      <nav class="brotkrumen" aria-label="Brotkrumen"><a href="index.html">Start</a> / Kontakt</nav>
+      <h1>Beratung anfragen</h1>
+      <p class="einleitung">Schreiben Sie uns kurz, worum es geht. Wir rufen Sie innerhalb von zwei Werktagen zurück und vereinbaren einen kostenlosen Termin vor Ort.</p>
+      
+    </div>
+    
+  </div>
+</section>
+
+<section class="abschnitt">
+  <div class="wrap zweispaltig oben">
+    <form class="formular" action="kontakt.php" method="post" novalidate>
+      <p class="meldung fehler" id="formular-fehler" hidden role="alert">Die Nachricht wurde nicht gesendet. Bitte füllen Sie Name und Telefonnummer aus und versuchen Sie es erneut – oder rufen Sie uns an.</p>
+      <div class="feldgruppe">
+        <div class="feld"><label for="name">Ihr Name</label><input id="name" name="name" type="text" autocomplete="name" required></div>
+        <div class="feld"><label for="telefon">Telefonnummer</label><input id="telefon" name="telefon" type="tel" autocomplete="tel" required></div>
+      </div>
+      <div class="feldgruppe">
+        <div class="feld"><label for="email">E-Mail <span class="optional">(optional)</span></label><input id="email" name="email" type="email" autocomplete="email"></div>
+        <div class="feld"><label for="plz">Postleitzahl <span class="optional">(optional)</span></label><input id="plz" name="plz" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="5"></div>
+      </div>
+      <div class="feld">
+        <label for="anliegen">Worum geht es?</label>
+        <select id="anliegen" name="anliegen">
+          <option value="badumbau">Barrierefreier Badumbau</option>
+          <option value="sanierung">Sanierung oder Umbau</option>
+          <option value="objektservice">Objektservice</option>
+          <option value="b2b">Zusammenarbeit (Pflegedienst, Hausverwaltung)</option>
+          <option value="partner">Partner werden (Handwerksbetrieb)</option>
+          <option value="sonstiges">Etwas anderes</option>
+        </select>
+      </div>
+      <div class="feld">
+        <label for="nachricht">Ihre Nachricht <span class="optional">(optional)</span></label>
+        <textarea id="nachricht" name="nachricht" aria-describedby="nachricht-hilfe"></textarea>
+        <p class="hilfe" id="nachricht-hilfe">Bitte keine Angaben zu Gesundheit oder Pflegegrad – das besprechen wir persönlich.</p>
+      </div>
+      <div class="hp" aria-hidden="true"><label for="website">Bitte leer lassen</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+      <input type="hidden" name="ts" id="ts" value="">
+      <p class="kleingedruckt">Wir verwenden Ihre Angaben nur, um Ihre Anfrage zu bearbeiten. Mehr dazu in unserer <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
+      <div><button class="btn btn-primaer" type="submit">Anfrage senden</button></div>
+    </form>
+    <aside class="kontaktdaten" aria-label="Kontaktdaten">
+      <dl>
+        <dt>Telefon</dt><dd><a href="tel:+491789176594">0178 9176594</a><br><span class="leise">Montag bis Freitag, 8 bis 18 Uhr</span></dd>
+        <dt>E-Mail</dt><dd><a href="mailto:info@impola.de">info@impola.de</a></dd>
+        <dt>Anschrift</dt><dd>IMPOLA UG (haftungsbeschränkt)<br>Schillstr. 6<br>44339 Dortmund</dd>
+        <dt>Einsatzgebiet</dt><dd>Dortmund und Ruhrgebiet</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="spalten">
+      <div>
+        <a class="logo" href="index.html"><img src="assets/img/impola-logo.png" alt="IMPOLA" width="640" height="201" loading="lazy"></a>
+        <p>Alles rund um die Immobilie – aus einer Hand.</p>
+      </div>
+      <div>
+        <h2>Leistungen</h2>
+        <ul>
+          <li><a href="badumbau.html">Barrierefreier Badumbau</a></li>
+          <li><a href="sanierung.html">Sanierung & Umbau</a></li>
+          <li><a href="objektservice.html">Objektservice</a></li>
+          <li><a href="verwaltung.html">Immobilienverwaltung</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Unternehmen</h2>
+        <ul>
+          <li><a href="ueber-uns.html">Über uns</a></li>
+          <li><a href="partner-werden.html">Partner werden</a></li>
+          <li><a href="kontakt.html">Kontakt</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Kontakt</h2>
+        <ul>
+          <li><a href="tel:+491789176594">0178 9176594</a></li>
+          <li><a href="mailto:info@impola.de">info@impola.de</a></li>
+          <li>Schillstr. 6<br>44339 Dortmund</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-unten">
+      <span>© <span id="jahr">2026</span> IMPOLA UG (haftungsbeschränkt)</span>
+      <span><a href="impressum.html">Impressum</a> &nbsp; <a href="datenschutz.html">Datenschutz</a></span>
+    </div>
+  </div>
+</footer>
+<script src="assets/js/main.js" defer></script>
+</body>
+</html>

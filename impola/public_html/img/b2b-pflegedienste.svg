@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Platzhalter B2B – Gespräch im Flur">
+<defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="28" height="28" fill="#EEF1F3"/><rect width="14" height="28" fill="#E6EAED"/></pattern></defs>
+<rect width="1200" height="800" fill="url(#p)"/>
+<g transform="translate(600.0,333.5)" fill="none" stroke="#518419" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-46 7 L0 -35 L46 7 M-33 -4 V38 H33 V-4"/></g>
+<text x="600.0" y="421.0" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-weight="700" font-size="35" fill="#1E252C">Bild 4.8</text>
+<text x="600.0" y="466.5" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="25" fill="#2A2F35">B2B – Gespräch im Flur</text>
+<text x="600.0" y="505.0" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="22" fill="#5B636B">1200 × 800 px → img/b2b-pflegedienste.webp</text>
+</svg>

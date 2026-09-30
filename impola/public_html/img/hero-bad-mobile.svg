@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1125" viewBox="0 0 900 1125" role="img" aria-label="Platzhalter Hero Mobile – Bad hochkant">
+<defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="28" height="28" fill="#EEF1F3"/><rect width="14" height="28" fill="#E6EAED"/></pattern></defs>
+<rect width="900" height="1125" fill="url(#p)"/>
+<g transform="translate(450.0,513.1)" fill="none" stroke="#518419" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-34 5 L0 -26 L34 5 M-25 -3 V29 H25 V-3"/></g>
+<text x="450.0" y="578.1" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-weight="700" font-size="26" fill="#1E252C">Bild 4.2</text>
+<text x="450.0" y="611.9" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="19" fill="#2A2F35">Hero Mobile – Bad hochkant</text>
+<text x="450.0" y="640.5" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="16" fill="#5B636B">900 × 1125 px → img/hero-bad-mobile.webp</text>
+</svg>

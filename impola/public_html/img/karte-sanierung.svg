@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" role="img" aria-label="Platzhalter Leistung Sanierung – Altbauwohnung">
+<defs><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="28" height="28" fill="#EEF1F3"/><rect width="14" height="28" fill="#E6EAED"/></pattern></defs>
+<rect width="800" height="600" fill="url(#p)"/>
+<g transform="translate(400.0,256.3)" fill="none" stroke="#518419" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-30 5 L0 -23 L30 5 M-22 -2 V25 H22 V-2"/></g>
+<text x="400.0" y="313.8" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-weight="700" font-size="23" fill="#1E252C">Bild 4.4</text>
+<text x="400.0" y="343.7" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="17" fill="#2A2F35">Leistung Sanierung – Altbauwohnung</text>
+<text x="400.0" y="369.0" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="14" fill="#5B636B">800 × 600 px → img/karte-sanierung.webp</text>
+</svg>
