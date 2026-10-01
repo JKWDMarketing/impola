@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Erzeugt die statischen HTML-Seiten für impola.de (gemeinsamer Header/Footer)."""
-import json, os
+import json, os, re, datetime
 
 OUT = "public_html"
-DOMAIN = "https://impola.de"
+DOMAIN = "https://www.impola.de"   # Primär-Domain in Vercel (impola.de leitet auf www weiter)
+# Bis zur Eintragung ins Handelsregister mit Zusatz „i. G.“ auftreten (§ 11 GmbHG). Nach Eintragung: " i. G." löschen, build.py ausführen.
+FIRMA = "IMPOLA UG (haftungsbeschränkt) i. G."
+STAND = "Oktober 2026"
 TEL_ANZEIGE = "0178 9176594"
 TEL_LINK = "+491789176594"
 MAIL = "info@impola.de"
@@ -28,8 +31,9 @@ def ph(name, alt, w, h, cls="", lazy=True):
     return f'<img src="img/{name}.{ext}" alt="{alt}" width="{w}" height="{h}"{c}{l}>'
 
 
-def head(title, desc, slug, extra=""):
+def head(title, desc, slug, extra="", og="og-image"):
     canon = DOMAIN + ("/" if slug == "index" else f"/{slug}")
+    canon_tag = "" if slug in ("404", "danke") else f'<link rel="canonical" href="{canon}">\n'
     return f'''<!doctype html>
 <html lang="de">
 <head>
@@ -37,14 +41,15 @@ def head(title, desc, slug, extra=""):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
 <meta name="description" content="{desc}">
-<link rel="canonical" href="{canon}">
-<meta property="og:type" content="website">
+{canon_tag}<meta property="og:type" content="website">
 <meta property="og:locale" content="de_DE">
 <meta property="og:site_name" content="IMPOLA">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{canon}">
-<meta property="og:image" content="{DOMAIN}/img/og-image.jpg">
+<meta property="og:image" content="{DOMAIN}/img/{og}.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="theme-color" content="#1E252C">
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
@@ -87,7 +92,7 @@ FOOTER = f'''</main>
           <li><a href="badumbau.html">Barrierefreier Badumbau</a></li>
           <li><a href="sanierung.html">Sanierung & Umbau</a></li>
           <li><a href="objektservice.html">Objektservice</a></li>
-          <li><a href="verwaltung.html">Immobilienverwaltung</a></li>
+          <li><a href="verwaltung.html">Immobilienverwaltung</a> <span class="leise">(in Vorbereitung)</span></li>
         </ul>
       </div>
       <div>
@@ -108,8 +113,8 @@ FOOTER = f'''</main>
       </div>
     </div>
     <div class="footer-unten">
-      <span>© <span id="jahr">2026</span> IMPOLA UG (haftungsbeschränkt)</span>
-      <span><a href="impressum.html">Impressum</a> &nbsp; <a href="datenschutz.html">Datenschutz</a></span>
+      <span>© <span id="jahr">2026</span> {FIRMA}</span>
+      <span><a href="impressum.html">Impressum</a> &nbsp; <a href="datenschutz.html">Datenschutz</a> &nbsp; <a href="widerruf.html">Widerrufsbelehrung</a></span>
     </div>
   </div>
 </footer>
@@ -162,8 +167,16 @@ def seitenkopf(krumen, h1, einleitung, bild=None, aktionen=True, anliegen=""):
 '''
 
 
-def page(slug, title, desc, aktiv, body, extra=""):
-    html = head(title, desc, slug, extra) + header(aktiv) + body + FOOTER
+def saubere_links(html):
+    """index.html -> /, badumbau.html?x#y -> /badumbau?x#y, img/ und assets/ -> absolut (wichtig für 404 und Unterpfade)."""
+    html = re.sub(r'href="index\.html"', 'href="/"', html)
+    html = re.sub(r'href="([a-z0-9-]+)\.html([?#][^"]*)?"', lambda m: f'href="/{m.group(1)}{m.group(2) or ""}"', html)
+    html = re.sub(r'(href|src)="(assets|img)/', r'\1="/\2/', html)
+    return html
+
+
+def page(slug, title, desc, aktiv, body, extra="", og="og-image"):
+    html = saubere_links(head(title, desc, slug, extra, og) + header(aktiv) + body + FOOTER)
     with open(os.path.join(OUT, f"{slug}.html"), "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -244,11 +257,46 @@ ABLAUF = '''<ol class="ablauf">
   <li><h3>Umbau aus einer Hand</h3><p>Wir koordinieren alle Gewerke bis zur Übergabe. Sie haben einen festen Ansprechpartner.</p></li>
 </ol>'''
 
+ABLAUF_SAN = '''<ol class="ablauf">
+  <li><h3>Besichtigung</h3><p>Wir gehen Wohnung oder Haus gemeinsam durch, nehmen den Zustand auf und klären Ihre Wünsche.</p></li>
+  <li><h3>Leistungsplan</h3><p>Sie erhalten eine klare Aufstellung aller Arbeiten – mit Reihenfolge und realistischem Zeitplan.</p></li>
+  <li><h3>Festpreisangebot</h3><p>Ein schriftliches Angebot für das ganze Vorhaben. Sie wissen vorher, was es kostet.</p></li>
+  <li><h3>Koordination bis zur Übergabe</h3><p>Wir steuern alle Gewerke, halten Sie auf dem Laufenden und übergeben besenrein.</p></li>
+</ol>'''
+
+# Kundenstimmen: Layout steht. Die Texte unten sind Platzhalter und werden 1:1 durch echte,
+# schriftlich freigegebene Rückmeldungen ersetzt (Originalwortlaut, Vorname + Stadtteil).
+# Sobald echte Stimmen drin sind, STIMMEN_HINWEIS auf den Prüfhinweis umstellen (§ 5b Abs. 3 UWG).
+STIMMEN = [
+    ("Badumbau", "Hier steht bald die Rückmeldung unserer ersten Kundin oder unseres ersten Kunden – im Originalwortlaut und mit Einverständnis.", "Vorname, Stadtteil"),
+    ("Sanierung", "Wie lief die Planung, wie die Baustelle, wie die Übergabe? Was unsere Kunden dazu sagen, lesen Sie nach Abschluss der ersten Projekte hier.", "Vorname, Stadtteil"),
+    ("Objektservice", "Auch Hausverwaltungen und Eigentümer kommen hier zu Wort – sobald die ersten gemeinsamen Aufträge abgeschlossen sind.", "Hausverwaltung, Dortmund"),
+]
+STIMMEN_HINWEIS = "Wir veröffentlichen ausschließlich echte Rückmeldungen von Kunden, deren Projekt wir abgeschlossen haben – mit deren Einverständnis."
+ICON_ZITAT = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M20 12C11 14 6 20 6 29v7h14V22h-7c0-4 3-6.5 8-7.5zM42 12c-9 2-14 8-14 17v7h14V22h-7c0-4 3-6.5 8-7.5z"/></svg>'
+
+
+def stimmen_html():
+    karten = "".join(
+        f'''<figure class="stimme">
+        <span class="stimme-art">{art}</span>
+        {ICON_ZITAT}
+        <blockquote><p>{text}</p></blockquote>
+        <figcaption>{wer}</figcaption>
+      </figure>''' for art, text, wer in STIMMEN)
+    return f'''<section class="abschnitt" aria-labelledby="ref-titel">
+  <div class="wrap">
+    <div class="kopf"><h2 id="ref-titel">Stimmen unserer Kunden</h2></div>
+    <div class="stimmen">{karten}</div>
+    <p class="kleingedruckt stimmen-hinweis">{STIMMEN_HINWEIS}</p>
+  </div>
+</section>'''
+
 # ------------------------------------------------------------------ Startseite
 faq_rows, faq_schema = faq(FAQ_BAD[:5])
 localbusiness = {
     "@context": "https://schema.org", "@type": "HomeAndConstructionBusiness",
-    "name": "IMPOLA UG (haftungsbeschränkt)", "url": DOMAIN + "/",
+    "name": "IMPOLA", "legalName": FIRMA, "url": DOMAIN + "/",
     "logo": DOMAIN + "/assets/img/impola-logo.png", "image": DOMAIN + "/img/og-image.jpg",
     "telephone": "+49 178 9176594", "email": MAIL,
     "address": {"@type": "PostalAddress", "streetAddress": "Schillstr. 6", "postalCode": "44339",
@@ -308,11 +356,11 @@ index_body = f'''<section class="hero">
         </div>
       </a>
       <a class="leistung" href="sanierung.html">
-        {ph("karte-sanierung", "Frisch sanierte, helle Altbauwohnung", 800, 600)}
+        {ph("karte-sanierung", "Frisch sanierte, helle Altbauwohnung", 1200, 900)}
         <div class="leistung-text"><h3>Sanierung komplett</h3><p>Wohnungen und Häuser von Grund auf erneuern – koordiniert aus einer Hand.</p></div>
       </a>
       <a class="leistung" href="sanierung.html#umbau">
-        {ph("karte-umbau", "Handwerker montiert eine Trockenbauwand", 800, 600)}
+        {ph("karte-umbau", "Handwerker montiert eine Trockenbauwand", 1200, 900)}
         <div class="leistung-text"><h3>Umbau</h3><p>Grundrisse ändern, Wände setzen, Räume neu aufteilen.</p></div>
       </a>
       <a class="leistung" href="objektservice.html">
@@ -356,13 +404,7 @@ index_body = f'''<section class="hero">
   </div>
 </section>
 
-<section class="abschnitt" aria-labelledby="ref-titel">
-  <div class="wrap">
-    <div class="kopf"><h2 id="ref-titel">Stimmen unserer Kunden</h2></div>
-    <!-- PLATZHALTER: Nur echte, schriftlich freigegebene Kundenstimmen einsetzen (UWG). Bis dahin bleibt dieser Hinweis stehen. -->
-    <div class="leer"><p>Hier zeigen wir bald Rückmeldungen aus unseren ersten Projekten – echte Stimmen, mit Einverständnis unserer Kunden.</p></div>
-  </div>
-</section>
+{stimmen_html()}
 
 <section class="abschnitt" aria-labelledby="faq-titel">
   <div class="wrap">
@@ -373,7 +415,7 @@ index_body = f'''<section class="hero">
 
 {cta()}
 '''
-page("index", "IMPOLA – Barrierefreier Badumbau, Sanierung & Objektservice in Dortmund",
+page("index", "Barrierefreier Badumbau & Sanierung in Dortmund | IMPOLA",
      "Barrierefreier Badumbau, Sanierung und Objektservice aus einer Hand in Dortmund und im Ruhrgebiet. Wir helfen beim Zuschuss der Pflegekasse.",
      "index.html", index_body, ls_schema + faq_schema)
 
@@ -424,13 +466,12 @@ bad_body = seitenkopf("Barrierefreier Badumbau", "Barrierefreier Badumbau in Dor
         <img class="vn-nachher" src="img/nachher-1-dusche.webp" alt="Nachher: flache Duschtasse mit Glastür, heller Wandverkleidung, Haltegriff und Thermostat-Brausestange" width="1600" height="1200" loading="lazy">
         <span class="vn-label vn-links" aria-hidden="true">Vorher</span>
         <span class="vn-label vn-rechts" aria-hidden="true">Nachher</span>
-        <span class="vn-kennzeichnung">Beispielvisualisierung</span>
+        <span class="vn-kennzeichnung">Beispiel</span>
         <span class="vn-linie" aria-hidden="true"><span class="vn-griff"></span></span>
         <input class="vn-regler" type="range" min="0" max="100" value="50" step="1" aria-label="Vergleich: nach links für nachher, nach rechts für vorher">
       </div>
       <figcaption>
         <p class="vn-text">Die Wanne mit hohem Rand kommt raus, eine flache Duschtasse mit Glastür, fugenarmer Wandverkleidung und Haltegriff kommt rein. Der Rest des Bades bleibt, wie er ist – das spart Zeit und Kosten.</p>
-        <p class="kleingedruckt">Die Bilder sind computergenerierte Beispiele zur Veranschaulichung, kein Kundenprojekt. Echte Vorher-nachher-Fotos aus unseren Projekten folgen.</p>
       </figcaption>
     </figure>
   </div>
@@ -443,14 +484,14 @@ bad_body = seitenkopf("Barrierefreier Badumbau", "Barrierefreier Badumbau in Dor
 </section>
 {cta("Ihr Bad, sicher und bequem.", "Vereinbaren Sie einen kostenlosen Termin vor Ort. Wir melden uns innerhalb von zwei Werktagen.", "badumbau")}
 '''
-page("badumbau", "Barrierefreier Badumbau in Dortmund – Zuschuss der Pflegekasse | IMPOLA",
-     "Bodengleiche Dusche, Haltegriffe, unterfahrbarer Waschtisch: barrierefreier Badumbau in Dortmund. Bis zu 4.180 € Zuschuss der Pflegekasse möglich – wir helfen beim Antrag.",
-     "badumbau.html", bad_body, faq_schema_bad)
+page("badumbau", "Barrierefreier Badumbau in Dortmund mit Zuschuss | IMPOLA",
+     "Bodengleiche Dusche, Haltegriffe, unterfahrbarer Waschtisch: barrierefreier Badumbau in Dortmund. Bis zu 4.180 € Zuschuss möglich – wir helfen beim Antrag.",
+     "badumbau.html", bad_body, faq_schema_bad, og="og-badumbau")
 
 # ------------------------------------------------------------------ Sanierung & Umbau
 san_body = seitenkopf("Sanierung & Umbau", "Sanierung und Umbau aus einer Hand",
     "Ob eine Wohnung nach dem Auszug, ein älteres Haus oder ein neuer Grundriss: Wir koordinieren alle Arbeiten, damit Sie nicht jedes Gewerk einzeln beauftragen müssen.",
-    ph("karte-sanierung", "Frisch sanierte, helle Altbauwohnung", 800, 600, lazy=False), anliegen="sanierung") + f'''
+    ph("karte-sanierung", "Frisch sanierte, helle Altbauwohnung mit Parkett und Stuckdecke", 1200, 900, lazy=False), anliegen="sanierung") + f'''
 <section class="abschnitt" aria-labelledby="san-titel">
   <div class="wrap zweispaltig oben">
     <div>
@@ -467,7 +508,7 @@ san_body = seitenkopf("Sanierung & Umbau", "Sanierung und Umbau aus einer Hand",
     <div id="umbau">
       <h2>Umbau</h2>
       <p>Räume neu aufteilen, Wände setzen oder entfernen, Wohnungen an neue Lebenssituationen anpassen – auch altersgerecht und barrierefrei.</p>
-      <div class="bild-rund">{ph("karte-umbau", "Handwerker montiert eine Trockenbauwand", 800, 600)}</div>
+      <div class="bild-rund">{ph("karte-umbau", "Handwerker montiert eine Trockenbauwand", 1200, 900)}</div>
     </div>
   </div>
 </section>
@@ -481,15 +522,15 @@ san_body = seitenkopf("Sanierung & Umbau", "Sanierung und Umbau aus einer Hand",
 </section>
 <section class="abschnitt" aria-labelledby="ablauf-titel">
   <div class="wrap">
-    <div class="kopf"><h2 id="ablauf-titel">So läuft es ab</h2></div>
-    {ABLAUF}
+    <div class="kopf"><h2 id="ablauf-titel">So läuft Ihre Sanierung ab</h2></div>
+    {ABLAUF_SAN}
   </div>
 </section>
 {cta(anliegen="sanierung")}
 '''
 page("sanierung", "Sanierung & Umbau in Dortmund – koordiniert aus einer Hand | IMPOLA",
      "Komplettsanierung und Umbau von Wohnungen und Häusern in Dortmund und im Ruhrgebiet. Alle Gewerke koordiniert, ein fester Ansprechpartner.",
-     "sanierung.html", san_body)
+     "sanierung.html", san_body, og="og-sanierung")
 
 # ------------------------------------------------------------------ Objektservice
 obj_body = seitenkopf("Objektservice", "Objektservice für Wohnhäuser",
@@ -518,45 +559,85 @@ obj_body = seitenkopf("Objektservice", "Objektservice für Wohnhäuser",
 '''
 page("objektservice", "Objektservice in Dortmund für Eigentümer & Hausverwaltungen | IMPOLA",
      "Kleinreparaturen, Instandhaltung und Pflege rund ums Objekt in Dortmund und im Ruhrgebiet – für Eigentümer und Hausverwaltungen.",
-     "objektservice.html", obj_body)
+     "objektservice.html", obj_body, og="og-objektservice")
 
-# ------------------------------------------------------------------ Verwaltung (nur Info!)
-verw_body = seitenkopf("Immobilienverwaltung", "Immobilienverwaltung – in Vorbereitung",
-    "Wir bereiten die Immobilienverwaltung als weiteres Angebot vor. Sobald alle Voraussetzungen erfüllt sind, informieren wir an dieser Stelle.",
-    ph("karte-verwaltung", "Schlüsselbund und Aktenordner auf einem Schreibtisch", 800, 600, lazy=False), aktionen=False) + '''
+# ------------------------------------------------------------------ Verwaltung (in Vorbereitung)
+verw_body = seitenkopf("Immobilienverwaltung", "Immobilien&shy;verwaltung – in Vorbereitung",
+    "Verwaltung und Handwerk aus einer Hand: Wir bauen eine Immobilienverwaltung auf, bei der kaputte Haustüren nicht wochenlang auf einen Handwerker warten.",
+    ph("karte-verwaltung", "Schlüsselbund und Aktenordner auf einem Schreibtisch", 800, 600, lazy=False), aktionen=False) + f'''
 <section class="abschnitt">
   <div class="wrap">
-    <!-- WICHTIG: Kein Anfrageformular, keine Preise, keine Leistungszusagen, bis die Erlaubnis nach § 34c GewO erteilt ist. -->
+    <!-- WICHTIG: Keine Mandate, keine Preise, kein Anfrageformular, bis die Erlaubnis nach § 34c GewO erteilt ist. -->
+    <div class="infobox status">
+      <p><strong>Stand:</strong> Wir nehmen derzeit noch keine Verwaltungsmandate an. Wir starten, sobald die gewerberechtliche Erlaubnis nach § 34c GewO und die nötigen Versicherungen vorliegen.</p>
+    </div>
+  </div>
+</section>
+<section class="abschnitt" aria-labelledby="geplant-titel">
+  <div class="wrap">
+    <div class="kopf">
+      <h2 id="geplant-titel">Was wir vorbereiten</h2>
+      <p class="einleitung">Für Eigentümer in Dortmund und im Ruhrgebiet, die eine Verwaltung suchen, die selbst anpacken kann.</p>
+    </div>
+    <div class="karten3">
+      <div class="karte"><h3>Mietverwaltung</h3><p>Mieterwechsel, Nebenkostenabrechnung, Mietzahlungen, Kommunikation mit Mietern – für einzelne Wohnungen und ganze Häuser.</p></div>
+      <div class="karte"><h3>WEG-Verwaltung</h3><p>Eigentümerversammlungen, Wirtschaftsplan, Jahresabrechnung und Beschlussumsetzung nach dem Wohnungseigentumsgesetz.</p></div>
+      <div class="karte"><h3>Sonder&shy;eigentums&shy;verwaltung</h3><p>Für Kapitalanleger mit einzelnen Eigentumswohnungen: Wir kümmern uns um Mieter, Abrechnung und Instandhaltung Ihrer Einheit.</p></div>
+    </div>
+  </div>
+</section>
+<section class="abschnitt" aria-labelledby="anders-titel">
+  <div class="wrap zweispaltig oben">
+    <div>
+      <h2 id="anders-titel">Was uns unterscheiden soll</h2>
+      <p>Viele Verwaltungen verwalten nur – für jede Reparatur wird ein Fremdbetrieb gesucht. Bei uns sitzen Verwaltung, Objektservice und Sanierung unter einem Dach.</p>
+    </div>
+    <ul class="argumente">
+      <li><strong>Kurze Wege bei Schäden</strong>Kleinreparaturen erledigt unser Objektservice direkt, größere Arbeiten koordinieren wir mit unseren Meisterpartnern.</li>
+      <li><strong>Instandhaltung mit Plan</strong>Regelmäßige Begehungen, dokumentierter Zustand und eine vorausschauende Planung für Rücklagen.</li>
+      <li><strong>Nachvollziehbar</strong>Klare Abrechnung, feste Ansprechpartner und erreichbare Zeiten.</li>
+    </ul>
+  </div>
+</section>
+<section class="abschnitt">
+  <div class="wrap">
     <div class="infobox">
-      <p>Aktuell nehmen wir noch keine Verwaltungsmandate an. Unsere Leistungen rund um <a href="sanierung.html">Sanierung</a>, <a href="badumbau.html">Badumbau</a> und <a href="objektservice.html">Objektservice</a> stehen Eigentümern und Hausverwaltungen schon heute zur Verfügung.</p>
+      <h2 style="font-size:1.4rem">Interesse?</h2>
+      <p>Schreiben Sie uns eine kurze E-Mail, wenn wir Sie zum Start informieren sollen: <a href="mailto:{MAIL}?subject=Immobilienverwaltung%20%E2%80%93%20bitte%20zum%20Start%20informieren">{MAIL}</a>. Unsere Leistungen rund um <a href="sanierung.html">Sanierung</a>, <a href="badumbau.html">Badumbau</a> und <a href="objektservice.html">Objektservice</a> stehen Eigentümern und Hausverwaltungen schon heute zur Verfügung.</p>
     </div>
   </div>
 </section>
 '''
 page("verwaltung", "Immobilienverwaltung – in Vorbereitung | IMPOLA",
-     "IMPOLA bereitet die Immobilienverwaltung als weiteres Angebot vor.", "", verw_body,
-     '<meta name="robots" content="noindex, follow">\n')
+     "IMPOLA bereitet Mietverwaltung, WEG-Verwaltung und Sondereigentumsverwaltung in Dortmund vor – Verwaltung und Handwerk aus einer Hand.", "", verw_body,
+     '<meta name="robots" content="noindex, follow">\n', og="og-verwaltung")
 
 # ------------------------------------------------------------------ Über uns
 ueber_body = seitenkopf("Über uns", "Wer hinter IMPOLA steht",
     "Wir sind ein Dortmunder Unternehmen für Sanierung, Umbau und Objektservice. Unser Anspruch: Sie haben einen Ansprechpartner, der sich um alles kümmert.",
-    None, aktionen=False) + f'''
+    ph("ueber-uns", "Grundriss, Zollstock und Materialmuster auf einem Planungstisch", 1200, 900, lazy=False), aktionen=False) + f'''
 <section class="abschnitt" aria-labelledby="team-titel">
   <div class="wrap">
-    <h2 id="team-titel" class="kopf">Ihre Ansprechpartner</h2>
-    <!-- PLATZHALTER Porträts: echte Fotos, 1000 × 1250 px (4:5), heller Hintergrund, Kleidung Anthrazit. Keine KI-Porträts. Rollenbezeichnungen vor Livegang abstimmen. -->
-    <div class="team">
-      <div class="person">
-        {ph("portrait-tim-pomian", "Porträt Tim Pomian", 1000, 1250)}
+    <div class="kopf"><h2 id="team-titel">Ihre Ansprechpartner</h2></div>
+    <div class="ansprech">
+      <div class="ansprech-karte">
         <h3>Tim Pomian</h3>
         <p class="rolle">Projektleitung vor Ort</p>
-        <p>Tim ist Ihr Ansprechpartner auf der Baustelle – vom ersten Termin bis zur Übergabe.</p>
+        <p>Ihr Ansprechpartner auf der Baustelle – vom ersten Termin bis zur Übergabe.</p>
       </div>
-      <div class="person">
-        {ph("portrait-dennis-lasch", "Porträt Dennis Lasch", 1000, 1250)}
+      <div class="ansprech-karte">
         <h3>Dennis Lasch</h3>
         <p class="rolle">Geschäftsführung</p>
-        <p>Dennis verantwortet Angebote, Verträge und Organisation im Hintergrund.</p>
+        <p>Verantwortet Angebote, Verträge und Organisation im Hintergrund.</p>
+      </div>
+      <div class="ansprech-kontakt">
+        <h3>So erreichen Sie uns</h3>
+        <ul>
+          <li><span class="leise">Telefon</span><a href="tel:{TEL_LINK}">{TEL_ANZEIGE}</a><br><span class="leise">Mo–Fr, 8–18 Uhr</span></li>
+          <li><span class="leise">E-Mail</span><a href="mailto:{MAIL}">{MAIL}</a></li>
+          <li><span class="leise">Anschrift</span>Schillstr. 6, 44339 Dortmund</li>
+        </ul>
+        <a class="btn btn-primaer" href="kontakt.html">Beratung anfragen</a>
       </div>
     </div>
   </div>
@@ -578,12 +659,12 @@ ueber_body = seitenkopf("Über uns", "Wer hinter IMPOLA steht",
 '''
 page("ueber-uns", "Über uns – IMPOLA aus Dortmund",
      "IMPOLA aus Dortmund: Sanierung, Umbau und Objektservice aus einer Hand. Lernen Sie Ihre Ansprechpartner kennen.",
-     "ueber-uns.html", ueber_body)
+     "ueber-uns.html", ueber_body, og="og-ueber-uns")
 
 # ------------------------------------------------------------------ Partner werden
 partner_body = seitenkopf("Partner werden", "Für Handwerksbetriebe: Partner werden",
     "Wir suchen zuverlässige Betriebe aus Dortmund und dem Ruhrgebiet für Badumbau, Sanierung und Umbau. Sie konzentrieren sich aufs Handwerk – wir kümmern uns um Kunden und Organisation.",
-    None, anliegen="partner") + '''
+    ph("partner-werden", "Zwei Handwerker geben sich auf einer Baustelle die Hand", 1200, 900, lazy=False), anliegen="partner") + '''
 <section class="abschnitt">
   <div class="wrap zweispaltig oben">
     <div>
@@ -600,7 +681,7 @@ partner_body = seitenkopf("Partner werden", "Für Handwerksbetriebe: Partner wer
       <ul class="haken">
         <li>Gewerbeanmeldung, bei meisterpflichtigen Gewerken Eintrag in die Handwerksrolle</li>
         <li>Betriebshaftpflichtversicherung</li>
-        <li>Freistellungsbescheinigung nach § 48b EStG</li>
+        <li>Freistellungsbescheinigung nach § 48b EStG</li>
         <li>Unbedenklichkeitsbescheinigungen, z. B. SOKA-BAU und Berufsgenossenschaft, soweit zutreffend</li>
         <li>Termintreue und saubere Arbeit beim Kunden</li>
       </ul>
@@ -610,7 +691,7 @@ partner_body = seitenkopf("Partner werden", "Für Handwerksbetriebe: Partner wer
 '''+ cta("Lernen wir uns kennen.", "Erzählen Sie uns kurz, welches Gewerk Sie abdecken und in welchem Gebiet Sie arbeiten.", "partner")
 page("partner-werden", "Partner werden – Handwerksbetriebe im Ruhrgebiet | IMPOLA",
      "Handwerksbetriebe aus Dortmund und dem Ruhrgebiet: Werden Sie Partner von IMPOLA für Badumbau, Sanierung und Umbau.",
-     "", partner_body)
+     "", partner_body, og="og-partner")
 
 # ------------------------------------------------------------------ Kontakt
 kontakt_body = seitenkopf("Kontakt", "Beratung anfragen",
@@ -653,16 +734,17 @@ kontakt_body = seitenkopf("Kontakt", "Beratung anfragen",
       <dl>
         <dt>Telefon</dt><dd><a href="tel:{TEL_LINK}">{TEL_ANZEIGE}</a><br><span class="leise">Montag bis Freitag, 8 bis 18 Uhr</span></dd>
         <dt>E-Mail</dt><dd><a href="mailto:{MAIL}">{MAIL}</a></dd>
-        <dt>Anschrift</dt><dd>IMPOLA UG (haftungsbeschränkt)<br>Schillstr. 6<br>44339 Dortmund</dd>
+        <dt>Anschrift</dt><dd>{FIRMA}<br>Schillstr. 6<br>44339 Dortmund</dd>
         <dt>Einsatzgebiet</dt><dd>Dortmund und Ruhrgebiet</dd>
       </dl>
+      <div class="kontakt-bild">{ph("kontakt-termin", "Aufmaß im Bad beim kostenlosen Termin vor Ort", 1200, 900)}</div>
     </aside>
   </div>
 </section>
 '''
 page("kontakt", "Kontakt – Beratung anfragen | IMPOLA Dortmund",
      "Kostenlose Beratung zu Badumbau, Sanierung und Objektservice in Dortmund. Rufen Sie an oder schreiben Sie uns.",
-     "kontakt.html", kontakt_body)
+     "kontakt.html", kontakt_body, og="og-kontakt")
 
 # ------------------------------------------------------------------ Danke
 danke_body = seitenkopf("Anfrage gesendet", "Danke, Ihre Anfrage ist bei uns angekommen.",
@@ -680,44 +762,150 @@ nf_body = seitenkopf("Seite nicht gefunden", "Diese Seite gibt es nicht.",
 page("404", "Seite nicht gefunden | IMPOLA", "Seite nicht gefunden.", "", nf_body, '<meta name="robots" content="noindex">\n')
 
 # ------------------------------------------------------------------ Impressum
-impressum_body = seitenkopf("Impressum", "Impressum", "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)", None, aktionen=False) + f'''
+impressum_body = seitenkopf("Impressum", "Impressum", "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)", None, aktionen=False) + f'''
 <section class="abschnitt"><div class="wrap rechtstext">
-  <p><strong>IMPOLA UG (haftungsbeschränkt)</strong><br>Schillstr. 6<br>44339 Dortmund</p>
+  <p><strong>{FIRMA}</strong><br>Schillstr. 6<br>44339 Dortmund</p>
   <h2>Vertreten durch</h2>
-  <p>Geschäftsführer: Dennis Lasch <!-- bei Wechsel der Geschäftsführung sofort aktualisieren --></p>
+  <p>Geschäftsführer: Dennis Lasch</p>
   <h2>Kontakt</h2>
   <p>Telefon: <a href="tel:{TEL_LINK}">+49 178 9176594</a><br>E-Mail: <a href="mailto:{MAIL}">{MAIL}</a></p>
   <h2>Registereintrag</h2>
-  <p>Registergericht: <span class="offen">[Amtsgericht – nach Eintragung ergänzen]</span><br>Registernummer: <span class="offen">[HRB – nach Eintragung ergänzen]</span></p>
+  <p>Die Eintragung in das Handelsregister folgt. Registergericht und Registernummer ergänzen wir nach der Eintragung.</p>
+  <!-- Nach Eintragung ersetzen durch: Registergericht: Amtsgericht Dortmund · Registernummer: HRB ….. und in build.py bei FIRMA " i. G." entfernen. -->
   <h2>Umsatzsteuer-Identifikationsnummer</h2>
-  <p>gemäß § 27a UStG: <span class="offen">[USt-IdNr. ergänzen oder Abschnitt entfernen, falls keine vergeben]</span></p>
+  <p>Die Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG ergänzen wir nach Erteilung.</p>
+  <!-- Falls IMPOLA in die Handwerksrolle / das Verzeichnis zulassungsfreier Gewerbe eingetragen wird: Zuständige Kammer (Handwerkskammer Dortmund, Ardeystraße 93, 44139 Dortmund) und Berufsbezeichnung hier ergänzen. -->
   <h2>Verbraucherstreitbeilegung</h2>
   <p>Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+  <h2>Haftung für Inhalte und Links</h2>
+  <p>Wir erstellen die Inhalte dieser Website mit Sorgfalt. Angaben zu Förderungen, etwa zum Zuschuss der Pflegekasse, sind allgemeine Informationen und ersetzen keine Einzelfallprüfung durch die zuständige Stelle. Für Inhalte verlinkter fremder Websites sind ausschließlich deren Betreiber verantwortlich.</p>
 </div></section>
 '''
 page("impressum", "Impressum | IMPOLA", "Impressum der IMPOLA UG (haftungsbeschränkt), Dortmund.", "", impressum_body,
      '<meta name="robots" content="noindex, follow">\n')
 
-# ------------------------------------------------------------------ Datenschutz (Rahmen)
-ds_body = seitenkopf("Datenschutz", "Datenschutzerklärung", "Informationen zur Verarbeitung Ihrer Daten auf dieser Website.", None, aktionen=False) + f'''
+# ------------------------------------------------------------------ Datenschutz
+# Entwurf, zuletzt angepasst: Hosting Vercel, Formular per E-Mail, Postfach Zoom Mail, Videoberatung Zoom,
+# Handwerkersoftware „das programm“. Vor Freigabe prüfen (Anwalt/Datenschutzgenerator) – siehe Kommentare.
+ds_body = seitenkopf("Datenschutz", "Datenschutz&shy;erklärung", "Wie wir mit Ihren Daten umgehen – verständlich erklärt.", None, aktionen=False) + f'''
 <section class="abschnitt"><div class="wrap rechtstext">
-  <!--
-    HIER DEN GEPRÜFTEN TEXT DER BESTEHENDEN DATENSCHUTZERKLÄRUNG EINFÜGEN.
-    Für diese Website müssen mindestens enthalten sein:
-      1. Verantwortlicher (Block unten)
-      2. Hosting: Vercel Inc. (Server-Logfiles, Art. 6 Abs. 1 lit. f DSGVO, DPA/AVV mit Vercel, Drittlandtransfer USA – Grundlage angeben); E-Mail-Versand des Formulars über Google Workspace (SMTP)
-      3. Kontaktformular und E-Mail/Telefon (Art. 6 Abs. 1 lit. b bzw. f DSGVO, Speicherdauer)
-      4. Lokal eingebundene Schriftarten (keine Übertragung an Dritte)
-      5. Förder-Check: läuft nur im Browser, keine Speicherung, keine Übertragung
-      6. Keine Cookies, kein Tracking (solange zutreffend – sonst Usercentrics + Dienste ergänzen)
-      7. Betroffenenrechte, Beschwerderecht (LDI NRW), Stand-Datum
-    Superchat und Autocalls.ai NICHT aufnehmen, solange sie auf der Website nicht eingesetzt werden.
-  -->
-  <h2>Verantwortlicher</h2>
-  <p>IMPOLA UG (haftungsbeschränkt)<br>Schillstr. 6, 44339 Dortmund<br>Telefon: +49 178 9176594<br>E-Mail: <a href="mailto:{MAIL}">{MAIL}</a></p>
-  <div class="infobox"><p class="offen">[Platzhalter: Vollständigen Text der geprüften Datenschutzerklärung hier einsetzen. Die Seite erst veröffentlichen, wenn der Text vollständig ist.]</p></div>
+  <h2>1. Verantwortlicher</h2>
+  <p>{FIRMA}<br>Schillstr. 6, 44339 Dortmund<br>Vertreten durch den Geschäftsführer Dennis Lasch<br>Telefon: +49 178 9176594<br>E-Mail: <a href="mailto:{MAIL}">{MAIL}</a></p>
+  <p>Ein Datenschutzbeauftragter ist bei uns gesetzlich nicht vorgeschrieben. Bei Fragen zum Datenschutz wenden Sie sich direkt an die oben genannte Adresse.</p>
+
+  <h2>2. Das Wichtigste in Kürze</h2>
+  <ul>
+    <li>Wir setzen auf dieser Website <strong>keine Cookies</strong>, kein Tracking, keine Analyse-Tools und keine Werbe- oder Social-Media-Dienste ein.</li>
+    <li>Schriftarten liegen auf unserem eigenen Server. Beim Aufruf werden keine Daten an Schriftanbieter übertragen.</li>
+    <li>Der Zuschuss-Check läuft nur in Ihrem Browser. Ihre Antworten werden weder gespeichert noch an uns übertragen.</li>
+    <li>Daten, die Sie uns über das Kontaktformular, per E-Mail oder Telefon geben, nutzen wir nur, um Ihre Anfrage und Ihren Auftrag zu bearbeiten.</li>
+  </ul>
+
+  <h2>3. Hosting und Server-Logfiles</h2>
+  <p>Diese Website wird bei Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, USA, gehostet. Beim Aufruf einer Seite verarbeitet der Server technisch notwendige Daten: IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Referrer-URL, Browser und Betriebssystem sowie übertragene Datenmenge. Das ist nötig, um die Website auszuliefern und gegen Angriffe abzusichern.</p>
+  <p>Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren und stabilen Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Mit Vercel besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Für die Übermittlung in die USA gelten die EU-Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO), die Bestandteil dieses Vertrags sind. Logdaten werden nur kurzfristig gespeichert und anschließend gelöscht.</p>
+  <!-- PRÜFEN: Speicherdauer der Logs laut aktuellem Vercel-DPA; ob Vercel zusätzlich unter dem EU-US Data Privacy Framework zertifiziert ist. -->
+
+  <h2>4. Verschlüsselung</h2>
+  <p>Die Website nutzt aus Sicherheitsgründen eine TLS-Verschlüsselung. Sie erkennen sie am Schloss-Symbol und an „https://“ in der Adresszeile.</p>
+
+  <h2>5. Kontaktformular</h2>
+  <p>Wenn Sie uns über das Formular schreiben, verarbeiten wir Ihren Namen, Ihre Telefonnummer, Ihr Anliegen und – falls angegeben – E-Mail-Adresse, Postleitzahl und Nachricht. Zusätzlich wird ein Zeitstempel übertragen, mit dem wir automatisierte Spam-Einsendungen erkennen.</p>
+  <p>Die Angaben werden über eine Serverfunktion unseres Hosters verarbeitet und als E-Mail an {MAIL} gesendet. Auf dem Webserver selbst werden sie nicht gespeichert. Haben Sie eine E-Mail-Adresse angegeben, schicken wir Ihnen eine automatische Eingangsbestätigung.</p>
+  <p>Rechtsgrundlage ist die Durchführung vorvertraglicher Maßnahmen auf Ihre Anfrage (Art. 6 Abs. 1 lit. b DSGVO), bei sonstigen Anfragen unser berechtigtes Interesse an deren Beantwortung (Art. 6 Abs. 1 lit. f DSGVO). Name und Telefonnummer brauchen wir, um Sie zurückrufen zu können; ohne diese Angaben können wir die Anfrage über das Formular nicht bearbeiten.</p>
+  <p>Bitte machen Sie im Formular keine Angaben zu Ihrer Gesundheit oder einem Pflegegrad. Das besprechen wir persönlich.</p>
+
+  <h2>6. E-Mail und Telefon</h2>
+  <p>Wenn Sie uns anrufen oder eine E-Mail schreiben, verarbeiten wir die mitgeteilten Daten zur Bearbeitung Ihres Anliegens (Art. 6 Abs. 1 lit. b bzw. f DSGVO). Unser E-Mail-Postfach wird bei Zoom Communications, Inc., 55 Almaden Boulevard, 6th Floor, San Jose, CA 95113, USA, betrieben (Zoom Mail). Mit Zoom besteht ein Vertrag zur Auftragsverarbeitung. Die Übermittlung in die USA erfolgt auf Grundlage des Angemessenheitsbeschlusses der EU-Kommission zum EU-US Data Privacy Framework, ergänzend auf Grundlage der EU-Standardvertragsklauseln.</p>
+  <!-- PRÜFEN: Über welchen SMTP-Server versendet das Formular (Umgebungsvariable SMTP_HOST in Vercel)? Ist es nicht Zoom, sondern z. B. Google Workspace, hier zusätzlich nennen: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. -->
+
+  <h2>7. Videoberatung mit Zoom</h2>
+  <p>Auf Wunsch beraten wir Sie per Video. Dafür nutzen wir Zoom, ebenfalls ein Dienst der Zoom Communications, Inc. Verarbeitet werden dabei Name und E-Mail-Adresse, Bild- und Tondaten während des Gesprächs, Meeting-Metadaten (Datum, Uhrzeit, Dauer) sowie technische Verbindungsdaten wie die IP-Adresse. Gespräche zeichnen wir nicht auf.</p>
+  <p>Rechtsgrundlage ist die Durchführung vorvertraglicher Maßnahmen bzw. des Vertrags (Art. 6 Abs. 1 lit. b DSGVO). Für die Übermittlung in die USA gelten die unter Ziffer 6 genannten Grundlagen. Sie können eine Videoberatung jederzeit ablehnen – wir beraten Sie dann telefonisch oder vor Ort.</p>
+
+  <h2>8. Angebote, Aufträge und Rechnungen</h2>
+  <p>Für Kundenverwaltung, Angebote, Auftragsplanung und Rechnungen nutzen wir die cloudbasierte Handwerkersoftware „das programm“. Dort verarbeiten wir die für Ihren Auftrag nötigen Daten: Name, Anschrift, Kontaktdaten, Objektadresse, Aufmaße, Fotos vom Objekt, Angebote, Rechnungen und Zahlungsinformationen. Mit dem Anbieter besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO).</p>
+  <!-- PRÜFEN: Anbieter, Anschrift und Serverstandort von „das programm“ laut AVV hier eintragen. -->
+  <p>Rechtsgrundlage ist die Erfüllung des Vertrags (Art. 6 Abs. 1 lit. b DSGVO) sowie die Erfüllung gesetzlicher Aufbewahrungspflichten (Art. 6 Abs. 1 lit. c DSGVO).</p>
+
+  <h2>9. Angaben zu Pflegegrad und Gesundheit</h2>
+  <p>Für einen Zuschuss der Pflegekasse kann es nötig sein, dass wir Angaben zu einem Pflegegrad kennen, etwa um ein passendes Angebot für den Förderantrag zu erstellen. Diese Angaben sind Gesundheitsdaten. Wir verarbeiten sie nur mit Ihrer ausdrücklichen Einwilligung (Art. 9 Abs. 2 lit. a DSGVO) und nur für diesen Zweck. Sie können die Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen.</p>
+
+  <h2>10. Kundenstimmen</h2>
+  <p>Rückmeldungen von Kunden veröffentlichen wir nur mit deren ausdrücklicher Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) – mit Vornamen, Stadtteil und Art des Projekts. Die Einwilligung kann jederzeit widerrufen werden; wir entfernen die Stimme dann von der Website.</p>
+
+  <h2>11. Empfänger</h2>
+  <p>Ihre Daten erhalten nur, wer sie für die genannten Zwecke braucht: unsere Dienstleister für Hosting, E-Mail, Videoberatung und Auftragssoftware (jeweils als Auftragsverarbeiter), die Fachbetriebe aus unserem Partnernetzwerk, soweit sie Arbeiten bei Ihnen ausführen (Art. 6 Abs. 1 lit. b DSGVO), unser Steuerberater sowie Behörden, wenn wir gesetzlich dazu verpflichtet sind. An Ihre Pflegekasse geben wir nur Unterlagen weiter, wenn Sie das wünschen.</p>
+
+  <h2>12. Speicherdauer</h2>
+  <p>Anfragen, aus denen kein Auftrag entsteht, löschen wir spätestens sechs Monate nach dem letzten Kontakt. Auftragsunterlagen bewahren wir so lange auf, wie es das Handels- und Steuerrecht verlangt: Rechnungen und Buchungsbelege acht Jahre, Handels- und Geschäftsbriefe sechs Jahre, Jahresabschlüsse zehn Jahre (§ 257 HGB, § 147 AO). Danach werden die Daten gelöscht.</p>
+
+  <h2>13. Ihre Rechte</h2>
+  <p>Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18) und Datenübertragbarkeit (Art. 20). Eine erteilte Einwilligung können Sie jederzeit mit Wirkung für die Zukunft widerrufen (Art. 7 Abs. 3 DSGVO). Eine formlose Nachricht an {MAIL} genügt.</p>
+  <div class="infobox"><p><strong>Widerspruchsrecht (Art. 21 DSGVO):</strong> Soweit wir Daten auf Grundlage berechtigter Interessen verarbeiten (Art. 6 Abs. 1 lit. f DSGVO), können Sie dieser Verarbeitung aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit widersprechen.</p></div>
+  <p>Sie können sich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren. Für uns zuständig ist die Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen, Kavalleriestraße 2–4, 40213 Düsseldorf, <a href="https://www.ldi.nrw.de" rel="noopener">www.ldi.nrw.de</a>.</p>
+
+  <h2>14. Keine automatisierten Entscheidungen</h2>
+  <p>Wir treffen keine Entscheidungen, die ausschließlich auf einer automatisierten Verarbeitung beruhen (Art. 22 DSGVO). Auch der Zuschuss-Check ist nur eine unverbindliche Orientierung.</p>
+
+  <p class="leise">Stand: {STAND}</p>
 </div></section>
 '''
-page("datenschutz", "Datenschutzerklärung | IMPOLA", "Datenschutzerklärung der IMPOLA UG (haftungsbeschränkt).", "", ds_body)
+page("datenschutz", "Datenschutzerklärung | IMPOLA", "Datenschutzerklärung der IMPOLA UG (haftungsbeschränkt): Hosting, Kontaktformular, E-Mail, Videoberatung und Ihre Rechte.", "", ds_body)
+
+# ------------------------------------------------------------------ Widerrufsbelehrung
+# Muster nach Anlage 1 zu Art. 246a § 1 Abs. 2 EGBGB (Dienstleistungen/Werkleistungen) und Anlage 2 (Formular).
+# Vor Verwendung in Angeboten anwaltlich prüfen lassen – insbesondere bei Werkverträgen mit Materiallieferung.
+widerruf_body = seitenkopf("Widerrufsbelehrung", "Widerrufs&shy;belehrung",
+    "Für Verbraucher, die einen Vertrag mit uns außerhalb unserer Geschäftsräume – etwa beim Termin bei Ihnen zu Hause – oder ausschließlich per Telefon oder E-Mail schließen.", None, aktionen=False) + f'''
+<section class="abschnitt"><div class="wrap rechtstext">
+  <h2>Widerrufsrecht</h2>
+  <p>Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen.</p>
+  <p>Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.</p>
+  <p>Um Ihr Widerrufsrecht auszuüben, müssen Sie uns ({FIRMA}, Schillstr. 6, 44339 Dortmund, Telefon: +49 178 9176594, E-Mail: {MAIL}) mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das unten stehende Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.</p>
+  <p>Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.</p>
+  <h2>Folgen des Widerrufs</h2>
+  <p>Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen erhalten haben, einschließlich der Lieferkosten (mit Ausnahme der zusätzlichen Kosten, die sich daraus ergeben, dass Sie eine andere Art der Lieferung als die von uns angebotene, günstigste Standardlieferung gewählt haben), unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über Ihren Widerruf dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei der ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen wurde ausdrücklich etwas anderes vereinbart; in keinem Fall werden Ihnen wegen dieser Rückzahlung Entgelte berechnet.</p>
+  <p>Haben Sie verlangt, dass die Dienstleistungen während der Widerrufsfrist beginnen sollen, so haben Sie uns einen angemessenen Betrag zu zahlen, der dem Anteil der bis zu dem Zeitpunkt, zu dem Sie uns von der Ausübung des Widerrufsrechts hinsichtlich dieses Vertrags unterrichten, bereits erbrachten Dienstleistungen im Vergleich zum Gesamtumfang der im Vertrag vorgesehenen Dienstleistungen entspricht.</p>
+
+  <div class="infobox">
+    <h3 style="margin-top:0">Gut zu wissen: früher anfangen</h3>
+    <p>Soll der Umbau schon innerhalb der vierzehn Tage beginnen, bestätigen Sie uns das bitte ausdrücklich und schriftlich. Ihr Widerrufsrecht bleibt bestehen, bis die Arbeiten vollständig erbracht sind. Bei einem Widerruf zahlen Sie dann den Anteil, der bis dahin geleistet wurde.</p>
+  </div>
+
+  <h2 id="formular">Muster-Widerrufsformular</h2>
+  <p>Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.</p>
+  <div class="formularmuster">
+    <p>An {FIRMA}, Schillstr. 6, 44339 Dortmund, E-Mail: {MAIL}</p>
+    <p>Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über den Kauf der folgenden Waren (*)/die Erbringung der folgenden Dienstleistung (*)</p>
+    <p class="linie">&nbsp;</p>
+    <p>Bestellt am (*)/erhalten am (*)</p>
+    <p class="linie">&nbsp;</p>
+    <p>Name des/der Verbraucher(s)</p>
+    <p class="linie">&nbsp;</p>
+    <p>Anschrift des/der Verbraucher(s)</p>
+    <p class="linie">&nbsp;</p>
+    <p>Unterschrift des/der Verbraucher(s) (nur bei Mitteilung auf Papier)</p>
+    <p class="linie">&nbsp;</p>
+    <p>Datum</p>
+    <p class="linie">&nbsp;</p>
+    <p class="kleingedruckt">(*) Unzutreffendes streichen.</p>
+  </div>
+  <p class="leise">Stand: {STAND}</p>
+</div></section>
+'''
+page("widerruf", "Widerrufsbelehrung | IMPOLA", "Widerrufsbelehrung und Muster-Widerrufsformular der IMPOLA für Verbraucher.", "", widerruf_body,
+     '<meta name="robots" content="noindex, follow">\n')
+
+# ------------------------------------------------------------------ Sitemap & robots
+HEUTE = datetime.date.today().isoformat()
+SITEMAP = ["", "badumbau", "sanierung", "objektservice", "ueber-uns", "partner-werden", "kontakt", "datenschutz"]
+with open(os.path.join(OUT, "sitemap.xml"), "w", encoding="utf-8") as f:
+    f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
+    for u in SITEMAP:
+        f.write(f"  <url><loc>{DOMAIN}/{u}</loc><lastmod>{HEUTE}</lastmod></url>\n")
+    f.write("</urlset>\n")
+with open(os.path.join(OUT, "robots.txt"), "w", encoding="utf-8") as f:
+    f.write(f"User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: {DOMAIN}/sitemap.xml\n")
 
 print("Seiten erzeugt.")

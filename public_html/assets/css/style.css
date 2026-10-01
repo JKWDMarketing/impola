@@ -44,7 +44,7 @@ a:hover { color: var(--gruen-dunkel); }
 :focus-visible { outline: 3px solid var(--gruen); outline-offset: 3px; border-radius: 4px; }
 p { margin: 0 0 1em; max-width: 68ch; }
 
-h1, h2, h3 { color: var(--anthrazit); font-weight: 700; line-height: 1.15; margin: 0 0 .5em; letter-spacing: -0.015em; }
+h1, h2, h3 { color: var(--anthrazit); font-weight: 700; line-height: 1.15; margin: 0 0 .5em; letter-spacing: -0.015em; overflow-wrap: break-word; hyphens: auto; }
 h1 { font-size: clamp(2.25rem, 5.4vw, 4rem); letter-spacing: -0.03em; line-height: 1.05; }
 h2 { font-size: clamp(1.75rem, 3.4vw, 2.5rem); }
 h3 { font-size: 1.3rem; line-height: 1.3; }
@@ -55,6 +55,7 @@ h3 { font-size: 1.3rem; line-height: 1.3; }
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
 .abschnitt { padding: var(--abschnitt) 0; }
 .abschnitt + .abschnitt { padding-top: 0; }
+.seitenkopf + .abschnitt { padding-top: clamp(16px, 3vw, 32px); }
 .einleitung { font-size: 1.25rem; color: var(--text); max-width: 60ch; }
 .leise { color: var(--text-leise); }
 .kopf { max-width: 760px; margin-bottom: clamp(32px, 5vw, 56px); }
@@ -76,12 +77,12 @@ h3 { font-size: 1.3rem; line-height: 1.3; }
 
 /* ---------- Header ---------- */
 .header { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.97); border-bottom: 1px solid var(--linie); }
-.header .wrap { display: flex; align-items: center; gap: 24px; min-height: 84px; }
+.header .wrap { display: flex; align-items: center; gap: 20px; min-height: 84px; }
 .logo { flex: none; }
 .logo img { width: 176px; }
 .nav { margin-left: auto; }
 .nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; }
-.nav a { display: block; white-space: nowrap; padding: 10px 14px; font-weight: 600; font-size: 1rem; text-decoration: none; color: var(--anthrazit); border-radius: 8px; }
+.nav a { display: block; white-space: nowrap; padding: 10px 12px; font-weight: 600; font-size: 1rem; text-decoration: none; color: var(--anthrazit); border-radius: 8px; }
 .nav a:hover { background: var(--hellgrau); }
 .nav a[aria-current="page"] { box-shadow: inset 0 -3px 0 var(--gruen); border-radius: 0; }
 .header-tel { display: flex; align-items: center; gap: 8px; font-weight: 700; text-decoration: none; white-space: nowrap; }
@@ -89,10 +90,14 @@ h3 { font-size: 1.3rem; line-height: 1.3; }
 .header .btn { padding: 12px 22px; min-height: 48px; font-size: 1rem; white-space: nowrap; }
 .nav-toggle { display: none; margin-left: auto; background: none; border: 2px solid var(--anthrazit); border-radius: 10px; padding: 8px 12px; font: 700 1rem var(--font); color: var(--anthrazit); cursor: pointer; }
 
-@media (max-width: 1280px) {
+@media (max-width: 1359px) {
   .header .btn { display: none; }
 }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+  .header-tel span { display: none; }
+  .header-tel { padding: 10px; border: 2px solid var(--linie); border-radius: 10px; }
+}
+@media (max-width: 1000px) {
   .nav-toggle { display: inline-flex; align-items: center; gap: 8px; }
   .header-tel span { display: none; }
   .header-tel { order: 2; padding: 10px; border: 2px solid var(--linie); border-radius: 10px; }
@@ -224,6 +229,44 @@ h3 { font-size: 1.3rem; line-height: 1.3; }
 .person h3 { margin-bottom: 2px; }
 .person .rolle { color: var(--gruen-dunkel); font-weight: 600; margin-bottom: 10px; }
 
+/* ---------- Ansprechpartner (ohne Porträts) ---------- */
+.ansprech { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.ansprech-karte { border: 1px solid var(--linie); border-top: 4px solid var(--anthrazit); border-radius: var(--r-karte); padding: 28px 28px 24px; background: #fff; }
+.ansprech-karte h3 { margin-bottom: 2px; }
+.ansprech-karte .rolle, .person .rolle { color: var(--gruen-dunkel); font-weight: 600; margin-bottom: 12px; }
+.ansprech-kontakt { background: var(--hellgrau); border-radius: var(--r-karte); padding: 28px; }
+.ansprech-kontakt ul { list-style: none; padding: 0; margin: 0 0 20px; }
+.ansprech-kontakt li { margin-bottom: 14px; }
+.ansprech-kontakt li .leise:first-child { display: block; font-size: .9rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.ansprech-kontakt a { font-weight: 700; }
+
+/* ---------- Kundenstimmen ---------- */
+.stimmen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.stimme { position: relative; margin: 0; background: var(--hellgrau); border-radius: var(--r-karte); padding: 32px 30px 28px; display: flex; flex-direction: column; }
+.stimme svg { width: 40px; height: 40px; color: var(--gruen); margin: 18px 0 14px; }
+.stimme blockquote { margin: 0 0 20px; flex: 1; }
+.stimme blockquote p { font-size: 1.1rem; line-height: 1.55; color: var(--anthrazit); margin: 0; }
+.stimme figcaption { font-weight: 700; color: var(--anthrazit); padding-top: 16px; border-top: 1px solid var(--linie); }
+.stimme-art { align-self: flex-start; background: #fff; border-radius: var(--r-button); padding: 5px 14px; font-size: .9rem; font-weight: 600; color: var(--gruen-dunkel); }
+.stimmen-hinweis { margin-top: 20px; }
+
+/* ---------- Karten (Verwaltung) ---------- */
+.karten3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.karte { border: 1px solid var(--linie); border-radius: var(--r-karte); padding: 28px; background: #fff; }
+.karte p { margin-bottom: 0; }
+.infobox.status { border-left: 4px solid var(--gruen); border-radius: 0 var(--r-karte) var(--r-karte) 0; }
+.infobox.status p, .infobox p:last-child { margin-bottom: 0; }
+
+/* ---------- Kontaktbild ---------- */
+.kontakt-bild { margin-top: 28px; border-radius: 10px; overflow: hidden; }
+.kontakt-bild img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+
+/* ---------- Widerrufsformular ---------- */
+.formularmuster { border: 2px solid var(--linie); border-radius: var(--r-karte); padding: 28px 32px; margin: 16px 0 28px; }
+.formularmuster .linie { border-bottom: 1px solid #AEB6BD; margin: 0 0 20px; }
+.rechtstext ul { padding-left: 1.2em; }
+.rechtstext li { margin-bottom: 8px; }
+
 /* ---------- Formular ---------- */
 .formular { display: grid; gap: 20px; }
 .feldgruppe { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -246,7 +289,7 @@ h3 { font-size: 1.3rem; line-height: 1.3; }
 .kontaktdaten dd { margin: 2px 0 0; }
 
 /* ---------- Rechtstexte ---------- */
-.rechtstext { max-width: 820px; }
+.rechtstext { max-width: 820px; overflow-wrap: break-word; hyphens: auto; }
 .rechtstext h2 { font-size: 1.5rem; margin-top: 2em; }
 .rechtstext h3 { font-size: 1.15rem; margin-top: 1.5em; }
 .offen { background: #FFF6D6; border-left: 4px solid #C79A00; padding: 2px 8px; font-weight: 600; }
@@ -266,6 +309,8 @@ h3 { font-size: 1.3rem; line-height: 1.3; }
 /* ---------- Responsive ---------- */
 @media (max-width: 1000px) {
   .leistungen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ansprech, .stimmen, .karten3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ansprech-kontakt { grid-column: 1 / -1; }
   .ablauf { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
   .ablauf li:nth-child(2)::after { display: none; }
   .footer .wrap > .spalten { grid-template-columns: 1fr 1fr; }
@@ -276,7 +321,7 @@ h3 { font-size: 1.3rem; line-height: 1.3; }
   .feldgruppe { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
-  .leistungen, .team { grid-template-columns: minmax(0, 1fr); }
+  .leistungen, .team, .ansprech, .stimmen, .karten3 { grid-template-columns: minmax(0, 1fr); }
   .leistung.gross { flex-direction: column; }
   .leistung.gross > img { width: 100%; min-height: 0; aspect-ratio: 4 / 3; }
   .ablauf { grid-template-columns: minmax(0, 1fr); }
